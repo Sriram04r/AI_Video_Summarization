@@ -52,7 +52,8 @@ export default function Processing() {
           } else if (data.status === 'failed') {
             if (interval) clearInterval(interval);
             setStatus('failed');
-            setError('Processing failed. Please try again.');
+            // Check if the backend gave a specific error string (like a YouTube 429 IP ban)
+            setError(data.error || 'Processing failed. Please try again.');
           }
         }
       } catch (err) {
