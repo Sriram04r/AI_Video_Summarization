@@ -17,7 +17,7 @@ export default function Upload() {
     try {
       if (mode === 'file' && file) {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://127.0.0.1:8000/api/video/upload');
+        xhr.open('POST', `${import.meta.env.VITE_API_BASE_URL}/api/video/upload`);
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         
         const formData = new FormData();
@@ -39,7 +39,7 @@ export default function Upload() {
         };
         xhr.send(formData);
       } else if (mode === 'youtube' && youtubeUrl) {
-        const response = await fetch('http://127.0.0.1:8000/api/video/youtube', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/youtube`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

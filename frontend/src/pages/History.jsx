@@ -12,7 +12,7 @@ export default function History() {
 
     const fetchHistory = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/history/videos', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/history/videos`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -31,7 +31,7 @@ export default function History() {
     
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/history/clear', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/history/clear`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

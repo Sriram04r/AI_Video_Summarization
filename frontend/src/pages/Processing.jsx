@@ -19,7 +19,7 @@ export default function Processing() {
     const startProcessing = async () => {
       try {
         // Initiate the processing pipeline on the backend
-        const response = await fetch(`http://127.0.0.1:8000/api/video/process/${videoId}?language=English&difficulty=Intermediate`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/process/${videoId}?language=English&difficulty=Intermediate`, {
           method: 'POST',
           headers: { 
             'Authorization': `Bearer ${token}`,
@@ -40,7 +40,7 @@ export default function Processing() {
 
     const checkStatus = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/video/status/${videoId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/status/${videoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         

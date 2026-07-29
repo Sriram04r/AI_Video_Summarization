@@ -17,7 +17,7 @@ export default function Results() {
     const token = localStorage.getItem('token');
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/video/results/${videoId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/results/${videoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -42,7 +42,7 @@ export default function Results() {
     if (chatContainer) chatContainer.scrollIntoView({ behavior: 'smooth' });
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/video/chat/${videoId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/video/chat/${videoId}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export default function Results() {
 
   const handleDownloadReport = async () => {
     const token = localStorage.getItem('token');
-    window.open(`http://127.0.0.1:8000/api/video/report/${videoId}?token=${token}`, '_blank');
+    window.open(`${import.meta.env.VITE_API_BASE_URL}/api/video/report/${videoId}?token=${token}`, '_blank');
   };
 
   const formatDuration = (seconds) => {
@@ -81,7 +81,7 @@ export default function Results() {
   if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Loading results...</div>;
   if (!data) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Results not found.</div>;
 
-  const videoStreamUrl = data.filename ? `http://127.0.0.1:8000/uploads/${data.filename}` : '';
+  const videoStreamUrl = data.filename ? `${import.meta.env.VITE_API_BASE_URL}/uploads/${data.filename}` : '';
 
   const tabs = [
     { id: 'summaries', label: 'Summaries', icon: FileText },
@@ -223,7 +223,7 @@ export default function Results() {
                     return (
                       <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
                         <img 
-                          src={`http://127.0.0.1:8000/frames/video_${data.video_id || videoId}/${filename}`} 
+                          src={`${import.meta.env.VITE_API_BASE_URL}/frames/video_${data.video_id || videoId}/${filename}`} 
                           alt="Keyframe" 
                           className="w-full object-cover aspect-video"
                         />

@@ -12,7 +12,7 @@ export default function Dashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        const videosRes = await fetch('http://127.0.0.1:8000/api/history/videos', {
+        const videosRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/history/videos`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (videosRes.ok) {
@@ -20,7 +20,7 @@ export default function Dashboard() {
           setVideos(data.slice(0, 5));
         }
 
-        await fetch('http://127.0.0.1:8000/api/history', {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/history`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
       } catch (err) {
