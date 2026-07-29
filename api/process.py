@@ -58,28 +58,58 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
             }
             
             try:
-                from youtube_transcript_api import YouTubeTranscriptApi
+                rapid_api_key = os.getenv("RAPID_API_KEY")
+                rapid_api_host = os.getenv("RAPID_API_HOST")
                 
-                # Use list_transcripts to get all available transcripts
-                try:
-                    transcript_list = YouTubeTranscriptApi.list_transcripts(youtube_id)
-                except AttributeError:
-                    transcript_list = YouTubeTranscriptApi().list(youtube_id)
-                
-                # Try to find english first
-                try:
-                    transcript = transcript_list.find_transcript(['en'])
-                except Exception:
-                    # Fallback to the first available language
-                    transcript = next(iter(transcript_list))
-                    # Translate to english if translatable
-                    if transcript.language_code != 'en' and transcript.is_translatable:
-                        transcript = transcript.translate('en')
-                
-                transcript_data = transcript.fetch()
-                transcript_text = " ".join([t['text'] for t in transcript_data])
+                if rapid_api_key and rapid_api_host:
+                    import requests
+                    logger.info("Using RapidAPI to fetch transcript and bypass IP ban...")
+                    # Common RapidAPI endpoint format (e.g. janeshop's youtube-transcript-api)
+                    url = f"https://{rapid_api_host}/transcript"
+                    querystring = {"video_id": youtube_id, "lang": "en"}
+                    headers = {
+                        "X-RapidAPI-Key": rapid_api_key,
+                        "X-RapidAPI-Host": rapid_api_host
+                    }
+                    response = requests.get(url, headers=headers, params=querystring)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if isinstance(data, list):
+                            transcript_text = " ".join([t.get('text', '') for t in data])
+                        elif isinstance(data, dict) and 'content' in data:
+                            transcript_text = " ".join([t.get('text', '') for t in data['content']])
+                        elif isinstance(data, dict) and 'transcript' in data:
+                            transcript_text = data['transcript']
+                        else:
+                            transcript_text = str(data)
+                    else:
+                        raise Exception(f"RapidAPI request failed: {response.status_code} - {response.text}")
+                        
+                else:
+                    # Fallback to normal library (works locally, but banned on Render)
+                    from youtube_transcript_api import YouTubeTranscriptApi
+                    
+                    try:
+                        transcript_list = YouTubeTranscriptApi.list_transcripts(youtube_id)
+                    except AttributeError:
+                        transcript_list = YouTubeTranscriptApi().list(youtube_id)
+                    
+                    try:
+                        transcript = transcript_list.find_transcript(['en'])
+                    except Exception:
+                        transcript = next(iter(transcript_list))
+                        if transcript.language_code != 'en' and transcript.is_translatable:
+                            transcript = transcript.translate('en')
+                    
+                    transcript_data = transcript.fetch()
+                    transcript_text = " ".join([t['text'] for t in transcript_data])
             except Exception as e:
-                raise Exception(f"Failed to fetch YouTube transcript. The video might not have English subtitles: {str(e)}")
+                # Catch YouTube IP Bans specifically for clearer error messages
+                err_msg = str(e)
+                if "429 Client Error: Too Many Requests" in err_msg or "YouTubeRequestFailed" in err_msg:
+                    raise Exception("YouTube has blocked this server from downloading transcripts (Error 429). Please setup a RapidAPI key as instructed to bypass this block.")
+                raise Exception(f"Failed to fetch YouTube transcript: {err_msg}")
             
             with open(transcript_file_path, "w", encoding="utf-8") as f:
                 f.write(transcript_text)
