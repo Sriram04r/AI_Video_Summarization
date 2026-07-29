@@ -95,29 +95,29 @@ export default function Results() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-6 md:p-8 font-sans flex flex-col h-screen overflow-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 font-sans flex flex-col md:h-screen md:overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 pb-6 border-b border-slate-200 shrink-0">
-        <div className="flex items-center gap-6">
-          <Link to="/dashboard" className="text-slate-400 hover:text-indigo-600 transition-colors">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-6 border-b border-slate-200 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
+          <Link to="/dashboard" className="text-slate-400 hover:text-indigo-600 transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800 truncate max-w-xl">{data.title || 'Video Analysis'}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-800 line-clamp-2 md:truncate max-w-xl">{data.title || 'Video Analysis'}</h1>
             <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold mt-1.5 tracking-wider">
               <Clock className="w-3.5 h-3.5" /> 
               <span>DURATION: {formatDuration(data.duration)}</span>
             </div>
           </div>
         </div>
-        <button onClick={handleDownloadReport} className="flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm px-5 py-2.5 rounded-xl transition-colors font-semibold text-sm">
+        <button onClick={handleDownloadReport} className="w-full md:w-auto justify-center flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm px-5 py-2.5 rounded-xl transition-colors font-semibold text-sm shrink-0">
           <Download className="w-4 h-4" /> Download PDF Report
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(350px,30%)_1fr] gap-8 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(350px,30%)_1fr] gap-8 flex-1 md:min-h-0">
         {/* Sidebar */}
-        <div id="ai-chat-sidebar" className="flex flex-col space-y-6 min-h-0">
+        <div id="ai-chat-sidebar" className="flex flex-col space-y-6 md:min-h-0">
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm p-2 shrink-0">
             {isYouTube ? (
               <iframe
@@ -137,7 +137,7 @@ export default function Results() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0 pb-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <div className="h-[400px] md:h-auto md:flex-1 flex flex-col min-h-0 pb-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2 mb-4 shrink-0">
               <Sparkles className="w-4 h-4 text-indigo-500" /> AI Lecture Companion
             </h3>
