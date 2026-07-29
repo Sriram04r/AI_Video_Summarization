@@ -31,6 +31,14 @@ class UserProfile(BaseModel):
     username: str
     email: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
 # Dependency to get current user from JWT token
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserProfile:
     user_id = decode_access_token(token)
@@ -120,3 +128,54 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserProfile)
 def get_me(current_user: UserProfile = Depends(get_current_user)):
     return current_user
+
+import random
+import string
+from datetime import datetime, timedelta
+from api.email_service import send_verification_email
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        # Don't reveal if user exists or not
+        return {"message": "If that email exists, a reset code has been sent."}
+        
+    # Generate a random 6-digit code
+    code = ''.join(random.choices(string.digits, k=6))
+    
+    # Save to database with 15 minute expiry
+    user.reset_code = code
+    user.reset_code_expiry = datetime.utcnow() + timedelta(minutes=15)
+    db.commit()
+    
+    # Send email
+    send_verification_email(user.email, code)
+    
+    return {"message": "If that email exists, a reset code has been sent."}
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == req.email).first()
+    
+    if not user or not user.reset_code or user.reset_code != req.code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+        
+    if user.reset_code_expiry and datetime.utcnow() > user.reset_code_expiry:
+        raise HTTPException(status_code=400, detail="Verification code has expired")
+        
+    # Valid code! Hash new password
+    hashed_pwd = hash_password(req.new_password)
+    user.password = hashed_pwd
+    user.reset_code = None
+    user.reset_code_expiry = None
+    
+    # Add history
+    history_entry = History(
+        user_id=user.user_id,
+        activity="Password reset successfully"
+    )
+    db.add(history_entry)
+    db.commit()
+    
+    return {"message": "Password reset successfully"}

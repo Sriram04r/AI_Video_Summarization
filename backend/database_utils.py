@@ -6,6 +6,10 @@ from database.schema import Base
 # Determine Database URL. Default to local SQLite database in database/ folder.
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///database/db.sqlite")
 
+# Fix for older postgres:// URLs from some cloud providers (SQLAlchemy requires postgresql://)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 # SQLite specific argument (only needed for SQLite)
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):

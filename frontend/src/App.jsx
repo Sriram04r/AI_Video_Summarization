@@ -9,6 +9,7 @@ import Processing from './pages/Processing';
 import Results from './pages/Results';
 import History from './pages/History';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
 
 // Helper component for route guard protection
 function ProtectedRoute({ children }) {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Dashboard Workspace Routes */}
         <Route

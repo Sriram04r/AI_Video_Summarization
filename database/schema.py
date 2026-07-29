@@ -13,6 +13,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
+    reset_code: Mapped[str] = mapped_column(String(6), nullable=True)
+    reset_code_expiry: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     
     # Relationships
     videos: Mapped[List["Video"]] = relationship("Video", back_populates="user", cascade="all, delete-orphan")
