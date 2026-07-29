@@ -59,8 +59,25 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
             
             try:
                 from youtube_transcript_api import YouTubeTranscriptApi
-                transcript_list = YouTubeTranscriptApi.get_transcript(youtube_id)
-                transcript_text = " ".join([t['text'] for t in transcript_list])
+                
+                # Use list_transcripts to get all available transcripts
+                try:
+                    transcript_list = YouTubeTranscriptApi.list_transcripts(youtube_id)
+                except AttributeError:
+                    transcript_list = YouTubeTranscriptApi().list(youtube_id)
+                
+                # Try to find english first
+                try:
+                    transcript = transcript_list.find_transcript(['en'])
+                except Exception:
+                    # Fallback to the first available language
+                    transcript = next(iter(transcript_list))
+                    # Translate to english if translatable
+                    if transcript.language_code != 'en' and transcript.is_translatable:
+                        transcript = transcript.translate('en')
+                
+                transcript_data = transcript.fetch()
+                transcript_text = " ".join([t['text'] for t in transcript_data])
             except Exception as e:
                 raise Exception(f"Failed to fetch YouTube transcript. The video might not have English subtitles: {str(e)}")
             
