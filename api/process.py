@@ -412,7 +412,7 @@ def get_results(
         "video_id": video.video_id,
         "title": video.title,
         "duration": video.duration,
-        "filename": os.path.basename(video.file_path),
+        "filename": video.file_path if video.file_path.startswith("youtube://") else os.path.basename(video.file_path),
         "short_summary": summary.short_summary,
         "detailed_summary": summary.detailed_summary,
         "topic_summary": summary.topic_summary,

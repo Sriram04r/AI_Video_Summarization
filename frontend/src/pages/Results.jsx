@@ -227,26 +227,37 @@ export default function Results() {
 
             {activeTab === 'keyframes' && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {data.keyframes?.map((kf, i) => {
-                    const filename = kf.filename || kf;
-                    const timestamp = kf.timestamp !== undefined ? formatDuration(kf.timestamp) : '';
-                    return (
-                      <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
-                        <img 
-                          src={`${import.meta.env.VITE_API_BASE_URL}/frames/video_${data.video_id || videoId}/${filename}`} 
-                          alt="Keyframe" 
-                          className="w-full object-cover aspect-video"
-                        />
-                        {timestamp && (
-                          <div className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">
-                            {timestamp}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                {isYouTube ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <ImageIcon className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                    <h3 className="text-xl font-bold text-slate-700 mb-2">Visual Analysis Skipped</h3>
+                    <p className="max-w-md mx-auto text-slate-500 leading-relaxed">
+                      To conserve cloud bandwidth, visual keyframe extraction is bypassed for YouTube links. 
+                      If you need visual frame analysis, please use the <strong>Upload Local File</strong> option.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {data.keyframes?.map((kf, i) => {
+                      const filename = kf.filename || kf;
+                      const timestamp = kf.timestamp !== undefined ? formatDuration(kf.timestamp) : '';
+                      return (
+                        <div key={i} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:border-indigo-300 transition-colors">
+                          <img 
+                            src={`${import.meta.env.VITE_API_BASE_URL}/frames/video_${data.video_id || videoId}/${filename}`} 
+                            alt="Keyframe" 
+                            className="w-full object-cover aspect-video"
+                          />
+                          {timestamp && (
+                            <div className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">
+                              {timestamp}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
