@@ -78,68 +78,33 @@ async def upload_video(
 class YouTubeUploadRequest(BaseModel):
     url: str
 
+import re
+def extract_video_id(url: str):
+    regex = r"(?:v=|\/|youtu\.be\/|embed\/|shorts\/)([0-9A-Za-z_-]{11})"
+    match = re.search(regex, url)
+    if match:
+        return match.group(1)
+    return None
+
 @router.post("/youtube", status_code=status.HTTP_201_CREATED)
 def process_youtube_link(
     req: YouTubeUploadRequest,
     current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
-    os.makedirs(uploads_dir, exist_ok=True)
-    
-    unique_filename = f"{uuid.uuid4()}.mp4"
-    target_path = os.path.join(uploads_dir, unique_filename)
-    
-    try:
-        import imageio_ffmpeg
-        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-    except Exception:
-        ffmpeg_path = 'ffmpeg'
-
-    ydl_opts = {
-        'format': 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best',
-        'outtmpl': target_path,
-        'quiet': True,
-        'noplaylist': True,
-        'ffmpeg_location': ffmpeg_path,
-        'extractor_args': {'youtube': {'player_client': ['android']}}
-    }
-    
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(req.url, download=True)
-            title = info.get('title') if info else None
-            if not title:
-                title = 'YouTube Video'
-            video_title = f"{title}.mp4"
-            
-            # No file size check needed
-    except HTTPException as he:
-        raise he
-    except yt_dlp.utils.DownloadError as e:
-        if os.path.exists(target_path):
-            os.remove(target_path)
+    video_yt_id = extract_video_id(req.url)
+    if not video_yt_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to download YouTube video: {str(e)}"
-        )
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        if os.path.exists(target_path):
-            try:
-                os.remove(target_path)
-            except Exception:
-                pass
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {str(e)}"
+            detail="Invalid YouTube URL. Could not extract video ID."
         )
         
-    # Register video in the database
+    video_title = f"YouTube Video ({video_yt_id})"
+        
+    # Register video in the database using a special scheme for file_path
     new_video = Video(
         user_id=current_user.user_id,
-        file_path=os.path.abspath(target_path),
+        file_path=f"youtube://{video_yt_id}",
         title=video_title,
         duration=None
     )

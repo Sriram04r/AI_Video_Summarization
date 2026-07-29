@@ -81,7 +81,9 @@ export default function Results() {
   if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Loading results...</div>;
   if (!data) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Results not found.</div>;
 
-  const videoStreamUrl = data.filename ? `${import.meta.env.VITE_API_BASE_URL}/uploads/${data.filename}` : '';
+  const isYouTube = data.filename && data.filename.startsWith('youtube://');
+  const youtubeId = isYouTube ? data.filename.replace('youtube://', '') : '';
+  const videoStreamUrl = !isYouTube && data.filename ? `${import.meta.env.VITE_API_BASE_URL}/uploads/${data.filename}` : '';
 
   const tabs = [
     { id: 'summaries', label: 'Summaries', icon: FileText },
@@ -117,7 +119,16 @@ export default function Results() {
         {/* Sidebar */}
         <div id="ai-chat-sidebar" className="flex flex-col space-y-6 min-h-0">
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm p-2 shrink-0">
-            {videoStreamUrl ? (
+            {isYouTube ? (
+              <iframe
+                className="w-full rounded-xl aspect-video object-cover"
+                src={`https://www.youtube.com/embed/${youtubeId}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            ) : videoStreamUrl ? (
               <video src={videoStreamUrl} controls className="w-full rounded-xl bg-slate-950 aspect-video object-cover" />
             ) : (
               <div className="w-full aspect-video bg-slate-100 flex items-center justify-center rounded-xl border border-slate-200">

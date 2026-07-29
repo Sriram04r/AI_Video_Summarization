@@ -30,76 +30,116 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
             logger.error(f"Video {video_id} not found in background pipeline.")
             return
 
-        # Phase 1: Extract Audio (10%)
-        processing_status[video_id] = {
-            "status": "processing",
-            "progress": 10,
-            "message": "Extracting audio track from video...",
-            "error": None
-        }
+        is_youtube = video.file_path.startswith("youtube://")
+        youtube_id = video.file_path.replace("youtube://", "") if is_youtube else None
         
         transcripts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "transcripts")
         os.makedirs(transcripts_dir, exist_ok=True)
+        transcript_file_path = os.path.join(transcripts_dir, f"video_{video_id}_transcript.txt")
         audio_path = os.path.join(transcripts_dir, f"video_{video_id}.mp3")
         
-        duration = extract_audio(video.file_path, audio_path)
-        video.duration = duration
-        db.commit()
-        
-        # Phase 2: Speech-to-Text Transcription (45%)
-        processing_status[video_id] = {
-            "status": "processing",
-            "progress": 30,
-            "message": "Converting speech to text (this may take a moment)...",
-            "error": None
-        }
-        
-        transcript_text = ""
-        # Check if we should use Cloud STT or local Whisper
-        if use_cloud_stt:
-            provider = os.getenv("AI_PROVIDER", "gemini").lower()
-            if provider == "groq" and os.getenv("GROQ_API_KEY"):
-                try:
-                    transcript_text = transcribe_audio_with_groq(audio_path)
-                except Exception as ex:
-                    logger.error(f"Groq transcription failed, falling back to local Whisper: {ex}")
-                    transcript_text = transcribe_audio_locally(audio_path)
-            elif provider == "gemini" and os.getenv("GEMINI_API_KEY"):
-                try:
-                    transcript_text = transcribe_audio_with_gemini(audio_path)
-                except Exception as ex:
-                    logger.error(f"Gemini transcription failed, falling back to local Whisper: {ex}")
+        if is_youtube:
+            # Phase 1: Skip audio extraction
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 10,
+                "message": "Fetching direct YouTube transcript...",
+                "error": None
+            }
+            video.duration = 0
+            db.commit()
+            
+            # Phase 2: Download subtitles
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 30,
+                "message": "Downloading subtitles directly from YouTube...",
+                "error": None
+            }
+            
+            try:
+                from youtube_transcript_api import YouTubeTranscriptApi
+                transcript_list = YouTubeTranscriptApi.get_transcript(youtube_id)
+                transcript_text = " ".join([t['text'] for t in transcript_list])
+            except Exception as e:
+                raise Exception(f"Failed to fetch YouTube transcript. The video might not have English subtitles: {str(e)}")
+            
+            with open(transcript_file_path, "w", encoding="utf-8") as f:
+                f.write(transcript_text)
+                
+            # Phase 3: Skip Keyframes
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 60,
+                "message": "Skipping visual analysis for YouTube video...",
+                "error": None
+            }
+        else:
+            # Phase 1: Extract Audio (10%)
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 10,
+                "message": "Extracting audio track from video...",
+                "error": None
+            }
+            
+            duration = extract_audio(video.file_path, audio_path)
+            video.duration = duration
+            db.commit()
+            
+            # Phase 2: Speech-to-Text Transcription (45%)
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 30,
+                "message": "Converting speech to text (this may take a moment)...",
+                "error": None
+            }
+            
+            transcript_text = ""
+            # Check if we should use Cloud STT or local Whisper
+            if use_cloud_stt:
+                provider = os.getenv("AI_PROVIDER", "gemini").lower()
+                if provider == "groq" and os.getenv("GROQ_API_KEY"):
+                    try:
+                        transcript_text = transcribe_audio_with_groq(audio_path)
+                    except Exception as ex:
+                        logger.error(f"Groq transcription failed, falling back to local Whisper: {ex}")
+                        transcript_text = transcribe_audio_locally(audio_path)
+                elif provider == "gemini" and os.getenv("GEMINI_API_KEY"):
+                    try:
+                        transcript_text = transcribe_audio_with_gemini(audio_path)
+                    except Exception as ex:
+                        logger.error(f"Gemini transcription failed, falling back to local Whisper: {ex}")
+                        transcript_text = transcribe_audio_locally(audio_path)
+                else:
                     transcript_text = transcribe_audio_locally(audio_path)
             else:
                 transcript_text = transcribe_audio_locally(audio_path)
-        else:
-            transcript_text = transcribe_audio_locally(audio_path)
+                
+            # Save transcript text file
+            with open(transcript_file_path, "w", encoding="utf-8") as f:
+                f.write(transcript_text)
+                
+            # Phase 3: CV Keyframe Extraction (60%)
+            processing_status[video_id] = {
+                "status": "processing",
+                "progress": 60,
+                "message": "Analyzing visual scene changes and slide transitions...",
+                "error": None
+            }
             
-        # Save transcript text file
-        transcript_file_path = os.path.join(transcripts_dir, f"video_{video_id}_transcript.txt")
-        with open(transcript_file_path, "w", encoding="utf-8") as f:
-            f.write(transcript_text)
+            frames_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frames", f"video_{video_id}")
+            keyframes = extract_keyframes(video.file_path, frames_dir, video_id)
             
-        # Phase 3: CV Keyframe Extraction (60%)
-        processing_status[video_id] = {
-            "status": "processing",
-            "progress": 60,
-            "message": "Analyzing visual scene changes and slide transitions...",
-            "error": None
-        }
-        
-        frames_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frames", f"video_{video_id}")
-        keyframes = extract_keyframes(video.file_path, frames_dir, video_id)
-        
-        # Save frames in database
-        for kf in keyframes:
-            db_frame = Frame(
-                video_id=video_id,
-                frame_path=kf["frame_path"],
-                timestamp=kf["timestamp"]
-            )
-            db.add(db_frame)
-        db.commit()
+            # Save frames in database
+            for kf in keyframes:
+                db_frame = Frame(
+                    video_id=video_id,
+                    frame_path=kf["frame_path"],
+                    timestamp=kf["timestamp"]
+                )
+                db.add(db_frame)
+            db.commit()
         
         # Phase 4 & 5: AI Generation Tasks (75%)
         processing_status[video_id] = {
@@ -171,7 +211,7 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
         db.commit()
         
         # Cleanup WAV file on completion to save space
-        if os.path.exists(audio_path):
+        if not is_youtube and os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
             except Exception:
