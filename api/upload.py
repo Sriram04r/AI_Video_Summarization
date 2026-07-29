@@ -101,8 +101,7 @@ def process_youtube_link(
         'outtmpl': target_path,
         'quiet': True,
         'noplaylist': True,
-        'ffmpeg_location': ffmpeg_path,
-        'extractor_args': {'youtube': ['player_client=ios,android']}
+        'ffmpeg_location': ffmpeg_path
     }
     
     try:
