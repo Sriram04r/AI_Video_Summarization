@@ -64,9 +64,11 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
                 if rapid_api_key and rapid_api_host:
                     import requests
                     logger.info("Using RapidAPI to fetch transcript and bypass IP ban...")
-                    # Common RapidAPI endpoint format (e.g. janeshop's youtube-transcript-api)
-                    url = f"https://{rapid_api_host}/transcript"
-                    querystring = {"video_id": youtube_id, "lang": "en"}
+                    
+                    # Matches Solid API "Youtube Transcript" format
+                    url = f"https://{rapid_api_host}/api/transcript-with-url"
+                    youtube_url = f"https://www.youtube.com/watch?v={youtube_id}"
+                    querystring = {"url": youtube_url, "flat_text": "true", "lang": "en"}
                     headers = {
                         "X-RapidAPI-Key": rapid_api_key,
                         "X-RapidAPI-Host": rapid_api_host
@@ -75,13 +77,16 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
                     
                     if response.status_code == 200:
                         data = response.json()
-                        if isinstance(data, list):
-                            transcript_text = " ".join([t.get('text', '') for t in data])
-                        elif isinstance(data, dict) and 'content' in data:
-                            transcript_text = " ".join([t.get('text', '') for t in data['content']])
-                        elif isinstance(data, dict) and 'transcript' in data:
-                            transcript_text = data['transcript']
+                        # Solid API returns flat_text if we request it, or it might be in a specific field.
+                        # Let's handle both flat text and structured json formats just in case.
+                        if isinstance(data, dict) and 'transcript' in data:
+                            transcript_text = str(data['transcript'])
+                        elif isinstance(data, dict) and 'data' in data:
+                            transcript_text = str(data['data'])
+                        elif isinstance(data, dict) and 'text' in data:
+                            transcript_text = str(data['text'])
                         else:
+                            # It might return a string directly or a list
                             transcript_text = str(data)
                     else:
                         raise Exception(f"RapidAPI request failed: {response.status_code} - {response.text}")
