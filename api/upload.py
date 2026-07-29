@@ -100,6 +100,14 @@ def process_youtube_link(
         )
         
     video_title = f"YouTube Video ({video_yt_id})"
+    try:
+        import requests
+        oembed_url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_yt_id}&format=json"
+        resp = requests.get(oembed_url, timeout=3)
+        if resp.status_code == 200:
+            video_title = resp.json().get("title", video_title)
+    except Exception:
+        pass
         
     # Register video in the database using a special scheme for file_path
     new_video = Video(
