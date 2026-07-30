@@ -77,16 +77,20 @@ def process_video_pipeline(video_id: int, language: str, difficulty: str, person
                     
                     if response.status_code == 200:
                         data = response.json()
-                        # Solid API returns flat_text if we request it, or it might be in a specific field.
-                        # Let's handle both flat text and structured json formats just in case.
-                        if isinstance(data, dict) and 'transcript' in data:
-                            transcript_text = str(data['transcript'])
-                        elif isinstance(data, dict) and 'data' in data:
-                            transcript_text = str(data['data'])
-                        elif isinstance(data, dict) and 'text' in data:
-                            transcript_text = str(data['text'])
+                        if isinstance(data, dict):
+                            if data.get('success') is False or 'error' in data:
+                                error_msg = data.get('error', data.get('message', 'Unknown RapidAPI error'))
+                                raise Exception(f"YouTube Transcript not available: {error_msg}")
+                                
+                            if 'transcript' in data:
+                                transcript_text = str(data['transcript'])
+                            elif 'data' in data:
+                                transcript_text = str(data['data'])
+                            elif 'text' in data:
+                                transcript_text = str(data['text'])
+                            else:
+                                transcript_text = str(data)
                         else:
-                            # It might return a string directly or a list
                             transcript_text = str(data)
                     else:
                         raise Exception(f"RapidAPI request failed: {response.status_code} - {response.text}")
