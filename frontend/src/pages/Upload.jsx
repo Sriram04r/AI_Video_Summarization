@@ -67,8 +67,8 @@ export default function Upload() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-xl bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 md:p-6 font-sans">
+      <div className="w-full max-w-xl bg-white border border-slate-200 p-6 md:p-8 rounded-3xl shadow-sm">
         <h2 className="text-3xl font-bold mb-6 text-center text-slate-800">Process Video</h2>
         
         <div className="flex gap-4 mb-8 p-1 bg-slate-100 rounded-xl">
@@ -88,7 +88,7 @@ export default function Upload() {
 
         <form onSubmit={handleUpload}>
           {mode === 'file' ? (
-            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-slate-50 rounded-2xl p-12 text-center transition-colors">
+            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-500 hover:bg-slate-50 rounded-2xl p-6 md:p-12 text-center transition-colors">
               <UploadIcon className="w-12 h-12 text-slate-400 mx-auto mb-4" />
               <input 
                 type="file" 

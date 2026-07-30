@@ -65,10 +65,10 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 p-8 flex items-center justify-center font-sans">
-      <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-10 shadow-sm">
-        <div className="flex items-center justify-between mb-10 pb-8 border-b border-slate-200">
-          <div className="flex items-center gap-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 flex items-center justify-center font-sans">
+      <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl p-6 md:p-10 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-200">
+          <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4 md:gap-6">
             <div className="w-20 h-20 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-md">
               <User className="w-10 h-10 text-white" />
             </div>
