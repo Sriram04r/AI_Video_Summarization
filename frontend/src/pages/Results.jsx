@@ -269,12 +269,47 @@ export default function Results() {
 
 function ContentCard({ title, content }) {
   if (!content) return null;
+
+  let displayContent = content;
+  
+  // 1. Fallback for older videos where the AI saved raw JSON instead of Markdown
+  if (typeof content === 'string' && content.trim().startsWith('{') && content.trim().endsWith('}')) {
+    try {
+      const parsed = JSON.parse(content);
+      let markdownStr = '';
+      for (const [key, value] of Object.entries(parsed)) {
+        markdownStr += `### ${key}\n\n`;
+        if (Array.isArray(value)) {
+           value.forEach(item => {
+             markdownStr += `- ${item}\n`;
+           });
+           markdownStr += '\n';
+        } else if (typeof value === 'object' && value !== null) {
+          for (const [subKey, subValue] of Object.entries(value)) {
+            markdownStr += `- **${subKey}**: ${subValue}\n`;
+          }
+          markdownStr += '\n';
+        } else {
+          markdownStr += `${value}\n\n`;
+        }
+      }
+      displayContent = markdownStr;
+    } catch (e) {
+      // Not valid JSON, continue
+    }
+  }
+
+  // 2. Fallback for older videos where the AI forgot linebreaks before ## headers
+  if (typeof displayContent === 'string' && displayContent.includes('##') && !displayContent.includes('\n')) {
+     displayContent = displayContent.replace(/##/g, '\n\n## ');
+  }
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-8 relative overflow-hidden group shadow-sm">
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500"></div>
       <h3 className="text-xl font-bold mb-6 text-slate-800 pl-2">{title}</h3>
       <div className="prose prose-slate max-w-none prose-p:leading-relaxed text-slate-600 text-base pl-2">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <ReactMarkdown>{displayContent}</ReactMarkdown>
       </div>
     </div>
   );
