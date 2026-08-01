@@ -207,15 +207,17 @@ def generate_summaries_and_notes(
     TRANSCRIPT:
     \"\"\"{transcript}\"\"\"
     
-    You must output a JSON object containing exactly these fields. Do not add markdown wrappers around the JSON, return ONLY the raw JSON string:
+    You must output a JSON object containing exactly these fields. Do not add markdown wrappers around the JSON, return ONLY the raw JSON string.
+    CRITICAL INSTRUCTION: The VALUE for each field MUST be a single string formatted using Markdown (with headings, bold text, lists). DO NOT return nested JSON objects or arrays inside these fields!
+    
     {{
-        "short_summary": "A concise, single-paragraph summary (approx 100 words) summarizing the core message.",
-        "detailed_summary": "A comprehensive, multi-paragraph summary covering all key aspects, arguments, and takeaways.",
-        "topic_summary": "A structured, topic-by-topic summary showing what was covered and when/how, using bullet points.",
-        "notes_important": "Key takeaways, crucial formulas/definitions, and main points that are absolute must-knows.",
-        "notes_revision": "Ultra-short, highly scannable summary/cheatsheet notes for quick revision right before an exam or interview.",
-        "notes_study": "In-depth study notes with explanations, structured hierarchies, and illustrative examples based on the transcript details.",
-        "keywords": "A comma-separated string of the top 10 most relevant keywords, concepts, or topics covered (e.g. 'Machine Learning, Neural Networks, Backpropagation')."
+        "short_summary": "A concise, single-paragraph summary (approx 100 words) summarizing the core message in Markdown format.",
+        "detailed_summary": "A comprehensive, multi-paragraph summary covering all key aspects, arguments, and takeaways in Markdown format.",
+        "topic_summary": "A structured, topic-by-topic summary showing what was covered and when/how, using Markdown bullet points.",
+        "notes_important": "Key takeaways, crucial formulas/definitions, and main points formatted as a beautiful Markdown list.",
+        "notes_revision": "Ultra-short, highly scannable cheatsheet notes for quick revision formatted in Markdown.",
+        "notes_study": "In-depth study notes with explanations, structured hierarchies, and illustrative examples based on the transcript details formatted in Markdown.",
+        "keywords": "A comma-separated string of the top 10 most relevant keywords, concepts, or topics covered (e.g. 'Machine Learning, Neural Networks')."
     }}
     """
 
